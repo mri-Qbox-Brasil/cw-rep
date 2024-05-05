@@ -86,6 +86,7 @@ local function createSkillMenuOX()
 
     lib.registerContext({
         id = 'skill_menu',
+        menu = 'menu_jogador',
         title = Config.SkillsTitle,
         options = options
     }, function(selected)
