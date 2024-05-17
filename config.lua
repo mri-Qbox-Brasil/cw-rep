@@ -8,27 +8,60 @@ Config.TypeCommand = true                   -- Set to "false" to disable the "/s
 Config.Skillmenu = "rep"                 -- phrase typed to display skills menu (check readme.md to set to commit to radial menu)
 Config.XPBarColour = "green"
 -- Config.EmailWaitTimes = { min = 45000, max =  300000 }
-Config.SendUpdateEmails = true -- if true, send emails when hitting the correct levels (if available)
+Config.SendUpdateEmails = false -- if true, send emails when hitting the correct levels (if available)
 Config.EmailWaitTimes = { min = 4500, max =  7000 }
 
-Config.GenericMaxAmount = 10000 -- the max skill level. Can be overrided by adding maxLevel to any skill
+Config.GenericMaxAmount = 1000000000 -- the max skill level. Can be overrided by adding maxLevel to any skill
 Config.GenericIcon = 'fas fa-book'
 
-Config.DefaultLevels = {
-    { from = 0, to = 100 },
-    { from = 100, to = 200 },
-    { from = 200, to = 300 },
-    { from = 300, to = 400 },
-    { from = 500, to = 600 },
-    { from = 600, to = 700 },
-    { from = 800, to = 900 },
-    { from = 900, to = 1000 },
-}
+-- Config.DefaultLevels = {
+--     { from = 0, to = 100 },
+--     { from = 100, to = 200 },
+--     { from = 200, to = 300 },
+--     { from = 300, to = 400 },
+--     { from = 500, to = 600 },
+--     { from = 600, to = 700 },
+--     { from = 800, to = 900 },
+--     { from = 900, to = 1000 },
+-- }
+-- Testando sistema de XP Exponencial
+-- Função para gerar os níveis exponencialmente
+local function generateExponentialLevels(baseExp, scaleFactor, levelCount)
+    local levels = {}
+    local fromExp = 0
+    for i = 1, levelCount do
+        local toExp = fromExp + baseExp * scaleFactor ^ (i - 1)
+        local nextToExp = fromExp + baseExp * scaleFactor ^ i
+        table.insert(levels, { from = fromExp, to = math.round(toExp) })
+        fromExp = nextToExp
+    end
+    return levels
+end
+
+-- Configurações para geração de níveis exponencialmente
+local baseExp = 100  -- Experiência base para o nível 1
+local scaleFactor = 1.1  -- Fator de escala para aumentar a experiência a cada nível (ajustado para uma progressão mais suave)
+local levelCount = 100  -- Número total de níveis
+
+-- Geração dos níveis exponencialmente
+Config.DefaultLevels = generateExponentialLevels(baseExp, scaleFactor, levelCount)
 
 Config.Skills = {
     fishing = {
         label = 'Pescador',
         icon = 'fas fa-fish-fins',
+    },
+    hunting = {
+        label = 'Caçador',
+        icon = 'crosshairs',
+    },
+    cooking = {
+        label = 'Cozinhar',
+        icon = 'fa-solid fa-drumstick-bite',
+    },
+    crafting = {
+        label = 'Fabricação',
+        icon = 'gear',
     },
     -- taxi = {
     --     label = 'Taxista',

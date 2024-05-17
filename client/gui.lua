@@ -43,8 +43,7 @@ local function createSkillMenuOX()
     local options = {}
     local sortedSkills = {}
     
-    local keys = {}
-    
+    local keys = {}   
 
     for key in pairs(Config.Skills) do
         table.insert(keys, key)
