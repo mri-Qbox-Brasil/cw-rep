@@ -39,7 +39,7 @@ local function createSkillMenu()
     exports['qb-menu']:openMenu(skillMenu)
 end
 
-local function createSkillMenuOX()
+local function createSkillMenuOX(type)
     local options = {}
     local sortedSkills = {}
     
@@ -52,7 +52,7 @@ local function createSkillMenuOX()
     table.sort(keys)
     -- Iterate over sorted keys and access corresponding values
     for _, key in ipairs(keys) do
-        if not Config.Skills[key].hide then
+        if not Config.Skills[key].hide and Config.Skills[key].type == type then
             local currentValue = mySkills[key] or 0
             local SkillLevel
             local min = 0
@@ -83,14 +83,14 @@ local function createSkillMenuOX()
         end
     end
 
+    local title = type == 'rep' and Config.RepTitle or Config.SkillsTitle
+
     lib.registerContext({
         id = 'skill_menu',
         menu = 'menu_jogador',
-        title = Config.SkillsTitle,
+        title = title,
         options = options
-    }, function(selected)
-        print('Selected: ' .. selected)
-    end)
+    })
 
     lib.showContext('skill_menu')
 end
@@ -98,7 +98,18 @@ end
 RegisterCommand(Config.Skillmenu, function()
     if mySkills == nil then return end
     if Config.TypeCommand and Config.UseOxMenu then
-        createSkillMenuOX()
+        createSkillMenuOX('skill')
+    elseif Config.TypeCommand then
+        createSkillMenu()
+    else 
+        Wait(10)
+    end
+end)
+
+RegisterCommand(Config.Repmenu, function()
+    if mySkills == nil then return end
+    if Config.TypeCommand and Config.UseOxMenu then
+        createSkillMenuOX('rep')
     elseif Config.TypeCommand then
         createSkillMenu()
     else 
