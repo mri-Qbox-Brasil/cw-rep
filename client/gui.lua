@@ -77,7 +77,7 @@ local function createSkillMenuOX(type)
                 args = {
                     currentValue = currentValue
                 },
-                progress = math.floor((currentValue - levelData.from) / (levelData.to - levelData.from) * 100),
+                progress = (currentValue - levelData.from) / (levelData.to - levelData.from) * 100,
                 colorScheme = Config.XPBarColour,
             }
         end

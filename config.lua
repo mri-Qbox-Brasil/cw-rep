@@ -40,17 +40,16 @@ local function generateExponentialLevels(baseExp, scaleFactor, levelCount)
     local fromExp = 0
     for i = 1, levelCount do
         local toExp = fromExp + baseExp * scaleFactor ^ (i - 1)
-        local nextToExp = fromExp + baseExp * scaleFactor ^ i
         table.insert(levels, { from = fromExp, to = math.round(toExp) })
-        fromExp = nextToExp
+        fromExp = math.round(toExp)
     end
     return levels
 end
 
 -- Configurações para geração de níveis exponencialmente
 local baseExp = 10  -- Experiência base para o nível 1
-local scaleFactor = 2  -- Fator de escala para aumentar a experiência a cada nível (ajustado para uma progressão mais suave)
-local levelCount = 100  -- Número total de níveis
+local scaleFactor = 1.5  -- Fator de escala para aumentar a experiência a cada nível (ajustado para uma progressão mais suave)
+local levelCount = 30  -- Número total de níveis
 
 -- Geração dos níveis exponencialmente
 Config.DefaultLevels = generateExponentialLevels(baseExp, scaleFactor, levelCount)

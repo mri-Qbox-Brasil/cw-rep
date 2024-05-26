@@ -8,17 +8,17 @@ function getLevel(currentSkill, skillName)
     local levels = Config.Skills[skillName].skillLevels or Config.DefaultLevels
     local levelLimits = levels[1]
     for index, levelData in ipairs(levels) do
-        if currentSkill > levelData.from and currentSkill <= levelData.to then
+        if currentSkill >= levelData.from and currentSkill < levelData.to then
             if levelData.title then return levelData.title, levelData end
             return level, levelData
         end
-        if currentSkill > levelData.to then
+        if currentSkill >= levelData.to then
             level = level+1
             levelLimits = levelData
         end
     end
     if #levels == level then
-        level = 'Max'
+        level = 'Maestria'
     end
     if levelLimits.title then return levelLimits.title, levelLimits end
     return level, levelLimits
