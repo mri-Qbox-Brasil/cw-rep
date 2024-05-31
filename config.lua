@@ -91,6 +91,16 @@ Config.Skills = {
         icon = 'bolt',
         type = 'rep'
     },
+    busdriver = {
+        label = 'Motorista',
+        icon = 'bus',
+        type = 'rep'
+    },
+    trucker = {
+        label = 'Caminhoneiro',
+        icon = 'fa-solid fa-truck-moving',
+        type = 'rep'
+    },
     -- streetreputation = {
     --     label = 'Reputação',
     --     icon = 'fas fa-mask',
