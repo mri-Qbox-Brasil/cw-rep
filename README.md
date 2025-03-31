@@ -1,126 +1,116 @@
 # cw-rep
 
-- A database held skill/XP system for qb (optimized from mz-skills)
-- Full backwards compatibility with mz-skills exports (no need to upgrade all your scripts using mz skills)
-- Supports QB menu and OX menu
+-   Um sistema de habilidade/XP para qb (otimizado a partir de mz-skills)
+-   Compatibilidade total com versões anteriores de exports do mz-skills (não há necessidade de atualizar todos os seus scripts usando mz skills)
+-   Suporta menu QB e menu OX
 
-> All credit to MrZainRP for [mz-skills](https://github.com/MrZainRP/mz-skills) which this is based on. Great script.
+>   Todo o crédito a MrZainRP por [mz-skills](https://github.com/MrZainRP/mz-skills) no qual isso é baseado. Ótimo script.
 
-> Something cw-rep DOES NOT have: GTAs standard character skills
+>   Algo que cw-rep NÃO tem: habilidades de personagem padrão do GTA
 
-> QB menu is supported... but probably won't recieve many updates or fixes unless critical, and might have limited functionality compared to OX
+>   O menu QB é suportado... mas provavelmente não receberá muitas atualizações ou correções a menos que sejam críticas, e pode ter funcionalidade limitada em comparação com OX
 
-# Links and stuff
-### ⭐ Check out our [Tebex store](https://cw-scripts.tebex.io/category/2523396) for some cheap scripts ⭐
+## Instalação
 
-### [More free scripts](https://github.com/stars/Coffeelot/lists/cw-scripts)  👈
+-   Baixe o recurso e coloque-o na pasta de recursos. Certifique-se de que a pasta se chama `cw-rep`
+-   Se você estiver instalando do zero: Importe o arquivo SQL para o banco de dados do seu servidor (ou seja, execute o arquivo sql e certifique-se de que o banco de dados está funcionando)
+-   Se você estiver mudando de mz-skills:
+    -   Certifique-se de atualizar as habilidades cw-rep na Configuração para corresponder a mz-skills se você quiser manter os nomes que você tem
+    -   Remova a pasta mz-skills
+-   Adicione ``start cw-rep`` ao seu server.cfg (ou simplesmente certifique-se de que cw-rep está na sua pasta [qb])
 
-**Support, updates and script previews**: [Join The discord!](https://discord.gg/FJY4mtjaKr)
+>   CW-rep tem um novo formato de banco de dados (otimizado) em comparação com mz-skills, mas esta conversão é feita enquanto o script está sendo usado. Isso pode fazer com que alguns personagens antigos não utilizados ainda tenham o formato antigo até serem usados
 
-If you want to support what we do, you can buy us a coffee here:
+## Configuração
 
-[![Buy Us a Coffee](https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg)](https://www.buymeacoffee.com/cwscriptbois )
+Você provavelmente vai querer fazer alguma configuração para este script, então certifique-se de se familiarizar com a configuração. Existem algumas pequenas diferenças entre este e mz, mas o script deve ser capaz de reescrever seus dados do banco de dados mz-skills para cw-rep em tempo real, desde que os nomes em `Config.Skills` correspondam.
 
+Você pode definir habilidades assim:
 
-# Installation
-- Download the resource and drop it to your resource folder. Make sure the folder is named `cw-rep`
-- If you're installing from scratch: Import the SQL file to your server's database (i.e. run the sql file and make sure the database runs)
-- If you are changing from mz-skills: 
-    - Make sure to update the cw-rep skills in the Config to match mz-skills if you want to keep the names you have
-    - Remove the mz-skills folder
-- Add ``start cw-rep`` to your server.cfg (or simply make sure cw-rep is in your [qb] folder)
-
-> CW-rep has a new (optimized) database format compared to mz-skills, but this conversion is done while the script is being used. This might cause some older unused characters to still have the old format until used
-
-## Setup
-
-You'll probably want to do some setup for this script, so make sure to familiarize yourself with the config. There are some minor differences between this and mz, but the script should be able to rewrite your mz-skills database data into cw-rep on the fly as long as the names in `Config.Skills` match.
-
-You can define skills like this:
 ```lua
-    lockpicking = { -- if you want to use names with spaces you'll need to type it as "['Lockicking Skill'] = {" for example
-        icon = 'fas fa-unlock', -- icon that shows in the menu
-        label = 'Lockpicking' -- Label that is displayed in the menu (defaults to name of the skill, just like mz skills if this is not defined)
+    lockpicking = { -- se você quiser usar nomes com espaços, você precisará digitá-lo como "['Habilidade de Arrombamento'] = {" por exemplo
+        icon = 'fas fa-unlock', -- ícone que aparece no menu
+        label = 'Arrombamento' -- Rótulo que é exibido no menu (o padrão é o nome da habilidade, assim como mz skills se isso não estiver definido)
     },
 ```
-> Find icon names [here](https://fontawesome.com/v5/search?m=free)
+> Encontre os nomes dos ícones [aqui](https://fontawesome.com/v5/search?m=free)
 
-> Note: cw rep does not come with the same default skills/rep as mz-skills so you will need to update the config 
+> Nota: cw-rep não vem com as mesmas habilidades/rep padrão que mz-skills, então você precisará atualizar a configuração
 
-If you want a skill that also sends the player notifications at certain levels you can define them like this:
+Se você quiser uma habilidade que também envie notificações ao jogador em certos níveis, você pode defini-las assim:
 ```lua
-    lockpicking = { -- if you want to use names with spaces you'll need to type it as "['Lockicking Skill'] = {" for example
-        icon = 'fas fa-unlock', -- icon that shows in the menu
-        label = 'Lockpicking' -- Label that is displayed in the menu (defaults to name of the skill, just like mz skills if this is not defined)
+    lockpicking = { -- se você quiser usar nomes com espaços, você precisará digitá-lo como "['Habilidade de Arrombamento'] = {" por exemplo
+        icon = 'fas fa-unlock', -- ícone que aparece no menu
+        label = 'Arrombamento' -- Rótulo que é exibido no menu (o padrão é o nome da habilidade, assim como mz skills se isso não estiver definido)
         messages = {
-            { notify = true, level = 50, message = "You're not horrible with that lockpick anymore" },
-            { notify = true, level = 100, message = "You start feeling better with that lockpick in your hand" },
-            { notify = true, level = 200, message = "You're getting good with a lockpick" },
-            { notify = true, level = 300, message = "You feel like you're nailing lockpicking now" },
-            { notify = true, level = 350, message = "No tumbler will go untouched. You're like the Lockpicking Lawyer!" },
+            { notify = true, level = 50, message = "Você não é mais horrível com essa gazua" },
+            { notify = true, level = 100, message = "Você começa a se sentir melhor com essa gazua na sua mão" },
+            { notify = true, level = 200, message = "Você está ficando bom com uma gazua" },
+            { notify = true, level = 300, message = "Você sente que está arrasando no arrombamento agora" },
+            { notify = true, level = 350, message = "Nenhum tambor ficará intocado. Você é como o Advogado do Arrombamento!" },
         }
     },
 ```
-The important thing here is the `notify = true` because without that you'll instead be sending emails! Email notifications are great for job reputation or area reputation for example. Here's how to define one with emails:
+O importante aqui é o `notify = true` porque sem isso você estará enviando e-mails! Notificações por e-mail são ótimas para reputação de trabalho ou reputação de área, por exemplo. Aqui está como definir uma com e-mails:
 
 ```lua
     foodelivery = {
         icon = 'fas fa-star',
-        label = 'Food delivery job rep',
+        label = 'Reputação do trabalho de entrega de comida',
         messages = {
-            { level = 50, message = "You're doing a great job", sender = "FeedStars HR", subject = "FeedStars" },
-            { level = 100, message = "We just wanted to tell you that we love you! ❤", sender = "FeedStars HR", subject = "FeedStars" },
-            { level = 220, message = "Keep up that delivering! ❤", sender = "FeedStars HR", subject = "FeedStars" },
-            { level = 300, message = "You're a real Food STAR! ⭐", sender = "FeedStars HR", subject = "FeedStars" },
-            { level = 500, message = "Do you even have a life?? Employee of the year!", sender = "FeedStars HR", subject = "FeedStars" },
+            { level = 50, message = "Você está fazendo um ótimo trabalho", sender = "RH da FeedStars", subject = "FeedStars" },
+            { level = 100, message = "Nós só queríamos dizer que amamos você! ❤", sender = "RH da FeedStars", subject = "FeedStars" },
+            { level = 220, message = "Continue entregando! ❤", sender = "RH da FeedStars", subject = "FeedStars" },
+            { level = 300, message = "Você é uma verdadeira ESTRELA da Comida! ⭐", sender = "RH da FeedStars", subject = "FeedStars" },
+            { level = 500, message = "Você sequer tem uma vida?? Funcionário do ano!", sender = "RH da FeedStars", subject = "FeedStars" },
         }
     },
 ```
-## Skill levels
-Default Skill levels are defined in `Config.DefaultLevels` and you can customize these to your liking, but you can also make custom levels for each individual skill, for example the streetreputation:
+## Níveis de Habilidade
+Os níveis de habilidade padrão são definidos em `Config.DefaultLevels` e você pode personalizá-los ao seu gosto, mas você também pode criar níveis personalizados para cada habilidade individual, por exemplo, a reputação de rua:
 ```lua
     streetreputation = {
         icon = 'fas fa-mask',
         skillLevels = {
-            { title = "Unknown", from = 00, to = 1000 },
-            { title = "Rookie", from = 1000, to = 2000 },
-            { title = "Hustler", from = 2000, to = 3000 },
-            { title = "Crimer", from = 3000, to = 4000 },
-            { title = "Urban Enforcer", from = 5000, to = 6000 },
-            { title = "Renagade", from = 6000, to = 7000 },
-            { title = "Underboss", from = 8000, to = 9000 },
-            { title = "Boss", from = 9000, to = 10000 }, 
+            { title = "Desconhecido", from = 00, to = 1000 },
+            { title = "Novato", from = 1000, to = 2000 },
+            { title = "Malandro", from = 2000, to = 3000 },
+            { title = "Criminoso", from = 3000, to = 4000 },
+            { title = "Executor Urbano", from = 5000, to = 6000 },
+            { title = "Renegado", from = 6000, to = 7000 },
+            { title = "Subchefe", from = 8000, to = 9000 },
+            { title = "Chefe", from = 9000, to = 10000 },
         }
     },
 ```
-> title is optional
+> título é opcional
 
-As you can see, you should also include a sender and a subject here.
+Como você pode ver, você também deve incluir um remetente e um assunto aqui.
 
-You can also find these examples in the Config.
+Você também pode encontrar esses exemplos na Configuração.
 
-# Using cw-rep
-## Clientside
+## Usando cw-rep
+### Clientside
 
-### To Update a skill please use the following export:
+#### Para atualizar uma habilidade, use o seguinte export:
 ```lua
     exports["cw-rep"]:updateSkill(skillName, amount)
 ```
-For example, to update "Searching" from bin-diving (as used with mz-bins)
+Por exemplo, para atualizar "Searching" de bin-diving (como usado com mz-bins)
 ```lua
     exports["cw-rep"]:updateSkill("Searching", 1)
 ```
-You can randomise the amount of skill gained, for example: 
+Você pode randomizar a quantidade de habilidade ganha, por exemplo:
  ```lua
     local searchgain = math.random(1, 3)
     exports["cw-rep"]:updateSkill("Searching", searchgain)
 ```
-### The export to check to see if a skill is equal or greater than a particular value is as follows:
+#### O export para verificar se uma habilidade é igual ou maior que um valor específico é o seguinte:
 ```lua
     exports["cw-rep"]:checkSkill(skill, val)
 ```
 
-You can use this to lock content behind a particular level, for example:
+Você pode usar isso para bloquear conteúdo atrás de um nível específico, por exemplo:
 ```lua
 exports["cw-rep"]:checkSkill("Searching", 100, function(hasskill)
     if hasskill then
@@ -130,7 +120,7 @@ exports["cw-rep"]:checkSkill("Searching", 100, function(hasskill)
     end
 end)
 ```
-Or as an alternative this:
+Ou como uma alternativa isso:
 ```lua
     local hasSkill = exports["cw-rep"]:playerHasEnoughSkill("Searching", 100)
     if hasSkill then
@@ -138,31 +128,31 @@ Or as an alternative this:
     end
 ```
 
-> The two above work sorta the same, just different ways to get the same result
+> Os dois acima funcionam mais ou menos da mesma forma, apenas maneiras diferentes de obter o mesmo resultado
 
-### The export to obtain a player's current skill to interact with other scripts is as follows:
+#### O export para obter a habilidade atual de um jogador para interagir com outros scripts é o seguinte:
 ```lua
     exports["cw-rep"]:getCurrentSkill(skill)
 ```
-> This one differs from mz-skills in that it directly returns the value. In Mz-skills you'd have to do `.Current` to get the value. If you use `GetCurrentSkill` (big G) it returns the same way as mz-skills used to do
+> Este difere de mz-skills em que retorna diretamente o valor. Em Mz-skills você teria que fazer `.Current` para obter o valor. Se você usar `GetCurrentSkill` (G maiúsculo) ele retorna da mesma forma que mz-skills costumava fazer
 
-### To get the the level, rather than the skill amount/xp:
+#### Para obter o nível, em vez da quantidade de habilidade/xp:
 ```lua
     exports["cw-rep"]:getCurrentLevel(skill)
 ```
 
-Example: 
+Exemplo:
 ```lua
     local xp = exports["cw-rep"]:getCurrentSkill('crafting')
     local level = exports["cw-rep"]:getCurrentLevel('crafting')
     print('You are level ', level, ' in crafting. Your XP is', xp)
 ```
-### If you want info of a skill (what's defined in the config: label for example)
+#### Se você quiser informações de uma habilidade (o que está definido na configuração: rótulo, por exemplo)
 ```lua
     exports["cw-rep"]:getSkillInfo(skill)
 ```
 
-Example usage: 
+Exemplo de uso:
 ```lua
     local skillInfo = exports["cw-rep"]:getSkillInfo('gun_crafting')
     print('Label of gun_crafting is', skillInfo.label)
@@ -171,33 +161,35 @@ Example usage:
 
 
 ## Serverside
-To Update a skill please use the following export:
+Para atualizar uma habilidade, use o seguinte export:
 ```lua
     exports["cw-rep"]:updateSkill(source, skillName, amount)
 ```
-> `source` should obviously be the player source
-An example of how to use this would be:
+> `source` deve ser obviamente a fonte do jogador
+
+Um exemplo de como usar isso seria:
 ```lua
     exports["cw-rep"]:updateSkill(source, 'lockpicking', 10)
 ```
-The export to check to get player skills:
+O export para verificar para obter as habilidades do jogador:
 ```lua
     exports["cw-rep"]:fetchSkills(source)
 ```
-An example of how to use this would be:
+Um exemplo de como usar isso seria:
 ```lua
     local playerSkills = exports["cw-rep"]:fetchSkills(source)
-    print('Player with source',source, ' lockpicking skills:',playerSkills.lockpicking)
+    print('Jogador com fonte',source, ' habilidades de lockpicking:',playerSkills.lockpicking)
 ```
 
-> `source` should obviously be the player source
+> `source` deve ser obviamente a fonte do jogador
 
-## Radial Menu
-For radial menu access to "skills" command add this to qb-radialmenu/config.lua somewhere that looks fitting:
+## Menu Radial
+Para acesso ao menu radial ao comando "skills", adicione isso a qb-radialmenu/config.lua em algum lugar que pareça adequado:
+
 ```lua
     [3] = {
         id = 'skills',
-        title = 'Check Skills',
+        title = 'Verificar Habilidades',
         icon = 'triangle-exclamation',
         type = 'client',
         event = 'cw-rep:client:CheckSkills',
@@ -205,10 +197,21 @@ For radial menu access to "skills" command add this to qb-radialmenu/config.lua 
     },
 ```
 
-> 
+>
 
-# Previews
-## Ox 
+# Preview
+## Ox
 <p align="center">
     <img src="https://media.discordapp.net/attachments/1016069642495729715/1227702266119852132/image.png?ex=66295dd5&is=6616e8d5&hm=544bbf052da18b79839863217e8cee7fb700f8971ee1f2b388c448f62d534325&=&format=webp&quality=lossless"/>
 </p>
+
+## Links úteis
+### ⭐ Confira nossa [Tebex store](https://cw-scripts.tebex.io/category/2523396) para alguns scripts baratos ⭐
+
+### [Mais scripts gratuitos](https://github.com/stars/Coffeelot/lists/cw-scripts)  👈
+
+**Suporte, atualizações e previews de scripts:** [Entre no discord!](https://discord.gg/FJY4mtjaKr)
+
+Se você quiser apoiar o que fazemos, pode nos comprar um café aqui:
+
+[![Nos compre um café](https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg)](https://www.buymeacoffee.com/cwscriptbois)
