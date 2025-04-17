@@ -199,6 +199,10 @@ Para acesso ao menu radial ao comando "skills", adicione isso a qb-radialmenu/co
 
 >
 
+# Download
+
+[Download](https://github.com/mri-Qbox-Brasil/cw-rep)
+
 # Preview
 ## Ox
 <p align="center">
