@@ -33,13 +33,13 @@ export default function TalentPath({ path, isUnlocked, svgCenterX = 450 }) {
   };
   
   const dimColorMap = {
-    yellow: "rgba(234, 179, 8, 0.2)",
-    green: "rgba(34, 197, 94, 0.2)",
-    red: "rgba(239, 68, 68, 0.2)" 
+    yellow: "rgba(255, 255, 255, 0.08)",
+    green: "rgba(255, 255, 255, 0.08)",
+    red: "rgba(255, 255, 255, 0.08)" 
   };
 
   const activeColor = colorMap[path.color] || "rgba(56,224,123,1)";
-  const inactiveColor = dimColorMap[path.color] || "rgba(255,255,255,0.1)";
+  const inactiveColor = dimColorMap[path.color] || "rgba(255,255,255,0.08)";
 
   return (
     <path 

@@ -1,86 +1,73 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { cn } from "../lib/utils";
 
 // Mapping colors for branch types
 const colorClasses = {
   active: {
-    yellow: "bg-[#eab308] border-[#fde047] text-black shadow-[0_0_20px_rgba(234,179,8,0.8)]",
-    green: "bg-[#22c55e] border-[#4ade80] text-black shadow-[0_0_20px_rgba(34,197,94,0.8)]",
-    red: "bg-[#ef4444] border-[#f87171] text-black shadow-[0_0_20px_rgba(239,68,68,0.8)]",
-    default: "bg-primary border-white text-black shadow-[0_0_25px_rgba(56,224,123,0.8)]"
+    yellow: "bg-[#eab308]/20 border-[#fde047] text-[#fde047] shadow-[0_0_20px_rgba(234,179,8,0.5)]",
+    green: "bg-[#22c55e]/20 border-[#4ade80] text-[#4ade80] shadow-[0_0_20px_rgba(34,197,94,0.5)]",
+    red: "bg-[#ef4444]/20 border-[#f87171] text-[#f87171] shadow-[0_0_20px_rgba(239,68,68,0.5)]",
+    default: "bg-primary/20 border-primary text-primary shadow-[0_0_25px_rgba(56,224,123,0.5)]"
   },
   unlocked: {
-    yellow: "bg-slate-900 border-[#eab308] text-[#eab308] shadow-[0_0_15px_rgba(234,179,8,0.3)]",
-    green: "bg-slate-900 border-[#22c55e] text-[#22c55e] shadow-[0_0_15px_rgba(34,197,94,0.3)]",
-    red: "bg-slate-900 border-[#ef4444] text-[#ef4444] shadow-[0_0_15px_rgba(239,68,68,0.3)]",
-    default: "bg-slate-900 border-primary text-primary shadow-[0_0_15px_rgba(56,224,123,0.3)]"
+    yellow: "bg-black/60 border-zinc-700 text-zinc-500 hover:border-[#eab308] hover:text-[#eab308] hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all",
+    green: "bg-black/60 border-zinc-700 text-zinc-500 hover:border-[#22c55e] hover:text-[#22c55e] hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all",
+    red: "bg-black/60 border-zinc-700 text-zinc-500 hover:border-[#ef4444] hover:text-[#ef4444] hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all",
+    default: "bg-black/60 border-zinc-700 text-zinc-500 hover:border-primary hover:text-primary hover:shadow-[0_0_15px_rgba(56,224,123,0.3)] transition-all"
   },
-  fillStroke: {
-    yellow: "rgba(234,179,8,0.9)",
-    green: "rgba(34,197,94,0.9)",
-    red: "rgba(239,68,68,0.9)",
-    default: "rgba(56,224,123,0.9)"
-  }
+  draft: "bg-[#0ea5e9]/20 border-[#0ea5e9] text-[#0ea5e9] shadow-[0_0_20px_rgba(14,165,233,0.8)]"
 };
 
-export default function TalentNode({ node, status, currentLevel = 0, onPurchase, highlightPath }) {
-  const { id, icon, title, description, cost, maxLevel, bonus, position, isRoot, color } = node;
-  const [fillProgress, setFillProgress] = useState(0);
-  const [isPressing, setIsPressing] = useState(false);
-  const requestRef = useRef();
-  const startTimeRef = useRef();
+export default function TalentNode({ node, status, baseLevel = 0, draftLevel = 0, currentLevel = 0, onPurchase, highlightPath }) {
+  const { id, icon, title, description, cost, maxLevel, position, isRoot, color } = node;
 
-  const HOLD_DURATION = 500; // 0.5s for snappy purchase
-
-  const startFill = () => {
-    // Only allow fill if unlocked and not max level
-    if (status === "locked" || currentLevel >= maxLevel) return;
-    setIsPressing(true);
-    startTimeRef.current = performance.now();
-    requestRef.current = requestAnimationFrame(updateFill);
-    highlightPath(node.id);
-  };
-
-  const cancelFill = () => {
-    setIsPressing(false);
-    setFillProgress(0);
-    cancelAnimationFrame(requestRef.current);
-    highlightPath(null);
-  };
-
-  const updateFill = (timestamp) => {
-    if (!startTimeRef.current) return;
-    const elapsed = timestamp - startTimeRef.current;
-    
-    if (elapsed >= HOLD_DURATION) {
-      setFillProgress(100);
-      setIsPressing(false);
-      onPurchase(node); // Trigger purchase for 1 rank point
-    } else {
-      setFillProgress((elapsed / HOLD_DURATION) * 100);
-      requestRef.current = requestAnimationFrame(updateFill);
+  const triggerFeedback = (e) => {
+    const el = e.currentTarget.querySelector('.node-circle');
+    if (el) {
+       el.classList.add('scale-90', 'brightness-150');
+       setTimeout(() => el.classList.remove('scale-90', 'brightness-150'), 100);
     }
   };
 
-  useEffect(() => {
-    return () => cancelAnimationFrame(requestRef.current);
-  }, []);
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (status !== "locked" && currentLevel < maxLevel) {
+      onPurchase(node, "add");
+      triggerFeedback(e);
+    }
+  };
 
-  const radius = isRoot ? 34 : 28;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (fillProgress / 100) * circumference;
+  const handleRightClick = (e) => {
+    e.preventDefault();
+    if (draftLevel > 0) {
+      onPurchase(node, "remove");
+      triggerFeedback(e);
+    }
+  };
 
   const typeColor = color || "default";
   
-  // A node is visually "Active" (filled) if it has at least 1 point
-  const isFilled = currentLevel > 0;
-  const colorStyle = isFilled ? colorClasses.active[typeColor] : (status === "unlocked" ? colorClasses.unlocked[typeColor] : "bg-slate-800 border-slate-600 text-slate-500 opacity-60 grayscale");
-  const strokeColor = colorClasses.fillStroke[typeColor];
+  // A node is visually "Active" (filled) if it has at least 1 BASE point
+  const isBaseFilled = baseLevel > 0;
+  
+  // Is Draft if it has draft points
+  const isDraft = draftLevel > 0;
 
-  // For the cyberpunk bubble logic
-  const bubbleBg = isFilled ? colorClasses.active[typeColor].split(' ')[0] : "bg-slate-900";
-  const bubbleBorder = isFilled ? "border-black" : (status === "unlocked" ? colorClasses.unlocked[typeColor].split(' ')[1] : "border-slate-600");
-  const bubbleText = isFilled ? "text-black font-black" : (status === "unlocked" ? colorClasses.unlocked[typeColor].split(' ')[2] : "text-slate-500");
+  let colorStyle = "";
+  if (isDraft) {
+    colorStyle = colorClasses.draft;
+  } else if (isBaseFilled || isRoot) {
+    colorStyle = colorClasses.active[typeColor];
+  } else if (status === "unlocked") {
+    colorStyle = colorClasses.unlocked[typeColor];
+  } else {
+    colorStyle = "bg-zinc-950/40 border-zinc-800/80 text-zinc-700 opacity-50 shadow-inner"; // Locked minimalist look
+  }
+
+  // Bubble style matches the outer ring
+  const bubbleBg = "bg-black/90 backdrop-blur-sm";
+  const bubbleBorder = isDraft ? "border-[#0ea5e9]" : (isBaseFilled || isRoot ? colorClasses.active[typeColor].split(' ')[1] : "border-zinc-700");
+  const bubbleText = (isDraft || isBaseFilled || isRoot) ? "text-white drop-shadow-md" : "text-zinc-500";
 
   return (
     <div 
@@ -89,45 +76,24 @@ export default function TalentNode({ node, status, currentLevel = 0, onPurchase,
         status === "locked" ? "z-10" : "z-20 hover:z-[60]"
       )}
       style={{ top: `${position.y}px`, left: `calc(50% + ${position.x}px)` }}
-      onMouseDown={startFill}
-      onMouseUp={cancelFill}
-      onMouseLeave={cancelFill}
-      onTouchStart={startFill}
-      onTouchEnd={cancelFill}
+      onClick={handleClick}
+      onContextMenu={handleRightClick}
+      onMouseEnter={() => { if (status !== "locked") highlightPath(node.id); }}
+      onMouseLeave={() => highlightPath(null)}
     >
       <div className="relative flex justify-center items-center">
-        {/* Fill Animation Ring */}
-        {isPressing && (
-           <svg className="absolute -inset-4 w-[calc(100%+32px)] h-[calc(100%+32px)] -rotate-90 pointer-events-none" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r={radius + 4}
-                fill="none"
-                stroke={strokeColor}
-                strokeWidth="6"
-                strokeDasharray={circumference + 25} // approx adj
-                strokeDashoffset={strokeDashoffset + 25}
-                strokeLinecap="round"
-                className="transition-all duration-75"
-              />
-           </svg>
-        )}
 
         {/* Main Node Icon Circle */}
         <div 
           className={cn(
-            "rounded-full flex items-center justify-center transition-transform border-[3px]",
-            !isPressing && "group-hover:scale-110",
-            isPressing && "scale-95 brightness-110",
-            isRoot ? "w-[68px] h-[68px]" : "w-14 h-14",
+            "node-circle rounded-full flex items-center justify-center transition-all duration-150 border-[2px]",
+            !isDraft && status !== "locked" && "group-hover:scale-110",
+            isRoot ? "w-[60px] h-[60px]" : "w-12 h-12",
             colorStyle
           )}
         >
           <span className={cn(
-              "material-symbols-outlined pointer-events-none",
-              isRoot ? "text-4xl" : "text-3xl",
-              status === "locked" ? "opacity-70" : ""
+              "material-symbols-outlined pointer-events-none drop-shadow-md text-2xl"
           )}>
             {status === "locked" ? "lock" : icon}
           </span>
@@ -136,10 +102,10 @@ export default function TalentNode({ node, status, currentLevel = 0, onPurchase,
         {/* Cyberpunk Rank Bubble (0/5) */}
         {!isRoot && (
            <div className={cn(
-             "absolute -bottom-4 translate-y-1 px-2 py-0.5 rounded-full border-[2px] text-xs font-bold tracking-widest bg-slate-900 pointer-events-none z-30",
+             "absolute -bottom-3 translate-y-1 px-2 py-0.5 rounded-full border-[2px] text-[10px] font-black tracking-widest pointer-events-none z-30",
              bubbleBg, bubbleBorder, bubbleText,
              "shadow-md",
-             !isPressing && "group-hover:scale-110 transition-transform"
+             status !== "locked" && "group-hover:scale-110 transition-transform"
            )}>
              {currentLevel}/{maxLevel}
            </div>
@@ -149,12 +115,11 @@ export default function TalentNode({ node, status, currentLevel = 0, onPurchase,
       {/* Tooltip Hover Overlay */}
       {status !== "locked" && (
         <div className={cn(
-          "absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-64 bg-slate-900/95 border border-slate-700 rounded-lg p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]",
-          isPressing && "opacity-100" // Keep visible while pressing
+          "absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-64 bg-black/90 border border-zinc-800 rounded-xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.9)] backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]"
         )}>
           {/* Optional Video Thumbnail */}
           {node.video && (
-            <div className="w-full h-32 mb-3 bg-black rounded overflow-hidden border border-slate-700 shadow-inner">
+            <div className="w-full h-32 mb-3 bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800 shadow-inner">
               <video 
                 src={node.video} 
                 autoPlay 
@@ -167,15 +132,18 @@ export default function TalentNode({ node, status, currentLevel = 0, onPurchase,
           )}
 
           <div className="flex justify-between items-start mb-2 mt-1">
-            <h5 className={cn("font-bold text-base tracking-wide", colorClasses.unlocked[typeColor].split(' ')[2])}>{title}</h5>
-            <span className="bg-slate-800 text-slate-300 text-[10px] font-bold px-2 py-1 rounded border border-slate-700">Pts: {cost}</span>
+            <h5 className={cn(
+              "font-bold text-base tracking-wide", 
+              isDraft ? "text-[#0ea5e9]" : (isBaseFilled || isRoot ? colorClasses.active[typeColor].split(' ')[2] : "text-white")
+            )}>{title}</h5>
+            <span className="bg-zinc-900 text-zinc-400 text-[9px] font-bold px-2 py-1 rounded border border-zinc-800">Pts: {cost}</span>
           </div>
-          <p className="text-slate-300 text-sm mb-3">{description}</p>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
+          <p className="text-zinc-400 text-xs mb-3 font-medium bg-zinc-950/50 p-2 rounded border border-zinc-800/50">{description}</p>
+          <div className="flex items-center justify-between text-xs font-semibold text-zinc-500">
             <span>Level: {currentLevel}/{maxLevel}</span>
-            {currentLevel >= maxLevel && <span className="text-[#22c55e]">MAXED</span>}
+            {currentLevel >= maxLevel && <span className={cn("tracking-widest", isDraft ? "text-[#0ea5e9]" : "text-[#4ade80]")}>MAXED</span>}
           </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 border-b border-r border-slate-700 rotate-45"></div>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-black border-b border-r border-zinc-800 rotate-45"></div>
         </div>
       )}
     </div>

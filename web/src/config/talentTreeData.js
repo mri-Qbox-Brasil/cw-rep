@@ -9,8 +9,8 @@ export const baseTreeNodes = [
     cost: 0,
     maxLevel: 1,
     color: "yellow",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4", // Exemplo de path de video
-    position: { x: 0, y: 700 }, // Starting lower for infinite growth upwards
+    video: "https://www.w3schools.com/html/mov_bbb.mp4",
+    position: { x: 0, y: 0 }, // Center
     connections: ["mob_1", "cond_1", "surv_1"]
   },
   {
@@ -21,7 +21,7 @@ export const baseTreeNodes = [
     cost: 1,
     maxLevel: 5,
     color: "yellow",
-    position: { x: 0, y: 550 },
+    position: { x: 0, y: -180 }, // Straight Up
     connections: ["mob_2"],
     requires: ["root"]
   },
@@ -33,7 +33,7 @@ export const baseTreeNodes = [
     cost: 2,
     maxLevel: 5,
     color: "yellow",
-    position: { x: 0, y: 400 },
+    position: { x: 0, y: -350 },
     connections: ["mob_3", "mob_4"],
     requires: ["mob_1"]
   },
@@ -45,7 +45,7 @@ export const baseTreeNodes = [
     cost: 3,
     maxLevel: 5,
     color: "yellow",
-    position: { x: -80, y: 250 },
+    position: { x: -120, y: -480 },
     connections: [],
     requires: ["mob_2"]
   },
@@ -57,7 +57,7 @@ export const baseTreeNodes = [
     cost: 3,
     maxLevel: 5,
     color: "yellow",
-    position: { x: 80, y: 250 },
+    position: { x: 120, y: -480 },
     connections: [],
     requires: ["mob_2"]
   },
@@ -71,7 +71,7 @@ export const baseTreeNodes = [
     cost: 1,
     maxLevel: 5,
     color: "green",
-    position: { x: -180, y: 620 },
+    position: { x: -160, y: 80 }, // Going Bottom Left
     connections: ["cond_2", "cond_3"],
     requires: ["root"]
   },
@@ -83,7 +83,7 @@ export const baseTreeNodes = [
     cost: 2,
     maxLevel: 5,
     color: "green",
-    position: { x: -300, y: 480 },
+    position: { x: -320, y: 150 },
     connections: ["cond_4"],
     requires: ["cond_1"]
   },
@@ -95,7 +95,7 @@ export const baseTreeNodes = [
     cost: 2,
     maxLevel: 5,
     color: "green",
-    position: { x: -140, y: 450 },
+    position: { x: -250, y: 280 },
     connections: [],
     requires: ["cond_1"]
   },
@@ -107,7 +107,7 @@ export const baseTreeNodes = [
     cost: 3,
     maxLevel: 5,
     color: "green",
-    position: { x: -400, y: 320 },
+    position: { x: -480, y: 200 },
     connections: [],
     requires: ["cond_2"]
   },
@@ -121,7 +121,7 @@ export const baseTreeNodes = [
     cost: 1,
     maxLevel: 5,
     color: "red",
-    position: { x: 180, y: 620 },
+    position: { x: 160, y: 80 }, // Going Bottom Right
     connections: ["surv_2", "surv_3"],
     requires: ["root"]
   },
@@ -133,7 +133,7 @@ export const baseTreeNodes = [
     cost: 2,
     maxLevel: 5,
     color: "red",
-    position: { x: 300, y: 480 },
+    position: { x: 320, y: 150 },
     connections: ["surv_4"],
     requires: ["surv_1"]
   },
@@ -145,7 +145,7 @@ export const baseTreeNodes = [
     cost: 2,
     maxLevel: 5,
     color: "red",
-    position: { x: 140, y: 450 },
+    position: { x: 250, y: 280 },
     connections: [],
     requires: ["surv_1"]
   },
@@ -157,7 +157,7 @@ export const baseTreeNodes = [
     cost: 3,
     maxLevel: 5,
     color: "red",
-    position: { x: 400, y: 320 },
+    position: { x: 480, y: 200 },
     connections: [],
     requires: ["surv_2"]
   }
@@ -175,12 +175,20 @@ export const categories = [
  */
 export function buildDynamicTree(baseNodes, unlockedLevels) {
   const nodesMap = new Map();
+  
   // Assign a base "angle" to root nodes so their spawned children know which direction to grow
   baseNodes.forEach(n => {
-    let baseAngle = -90; // Upwards
-    if (n.position.x < 0) baseAngle = -120; // Leaning left
-    if (n.position.x > 0) baseAngle = -60; // Leaning right
-    nodesMap.set(n.id, { ...n, connections: [...(n.connections || [])], growAngle: baseAngle });
+    let baseAngle = -90; // Default upwards
+    if (n.position.x !== 0 || n.position.y !== 0) {
+      baseAngle = (Math.atan2(n.position.y, n.position.x) * 180) / Math.PI;
+    }
+    nodesMap.set(n.id, { 
+       ...n, 
+       connections: [...(n.connections || [])], 
+       growAngle: baseAngle, 
+       depth: 1, 
+       spread: 45 // Initial wide spread for base node leaves
+    });
   });
 
   const getLevel = (id) => unlockedLevels[id] || 0;
@@ -199,38 +207,92 @@ export function buildDynamicTree(baseNodes, unlockedLevels) {
             if (parent) parentCost = parent.cost;
         }
         
-        const newCost = currentNode.cost + parentCost;
+        // We will define a function to find a clear spot by pushing the angle outward
+        const minDistance = 140; // Collision Radius
+        const findFreePosition = (baseAngle, searchDirection, dist, allPlacedSpreads) => {
+          let currentIterAngle = baseAngle;
+          let iterations = 0;
+          let foundFreeX = 0;
+          let foundFreeY = 0;
 
-        // Calculate Position based on Angle
-        // We branch off to the left and right of the node's current `growAngle`
-        const branchSpread = 35; // Expand 35 degrees left and right
-        const distance = 130;    // Move 130px away
+          while (iterations < 20) {
+             const rAngle = (currentIterAngle * Math.PI) / 180;
+             const tx = currentNode.position.x + Math.cos(rAngle) * dist;
+             const ty = currentNode.position.y + Math.sin(rAngle) * dist;
 
-        const angleLeft = currentNode.growAngle - branchSpread;
-        const angleRight = currentNode.growAngle + branchSpread;
+             // Collision Check against all known nodes
+             let hasCollision = false;
+             for (const node of nodesMap.values()) {
+                 const dx = node.position.x - tx;
+                 const dy = node.position.y - ty;
+                 if (Math.sqrt(dx * dx + dy * dy) < minDistance) {
+                    hasCollision = true;
+                    break;
+                 }
+             }
+             
+             if (!hasCollision) {
+               foundFreeX = tx;
+               foundFreeY = ty;
+               break;
+             }
 
-        const radLeft = (angleLeft * Math.PI) / 180;
-        const radRight = (angleRight * Math.PI) / 180;
+             // Push angle further away if collided
+             // Search direction is +1 (turn right) or -1 (turn left)
+             currentIterAngle += (15 * searchDirection); 
+             iterations++;
+          }
+          
+          return { x: foundFreeX, y: foundFreeY, finalAngle: currentIterAngle };
+        };
 
-        const posLeftX = currentNode.position.x + Math.cos(radLeft) * distance;
-        const posLeftY = currentNode.position.y + Math.sin(radLeft) * distance;
+        const depth = currentNode.depth || 1;
+        const currentSpread = currentNode.spread || 45;
 
-        const posRightX = currentNode.position.x + Math.cos(radRight) * distance;
-        const posRightY = currentNode.position.y + Math.sin(radRight) * distance;
+        let nextSpread = currentSpread * 0.85; 
+        if (nextSpread < 20) nextSpread = 20;
+         
+        const distance = 160 + (depth * 45); 
+
+        // Base Target Angles
+        const angleLeft = currentNode.growAngle - currentSpread;
+        const angleRight = currentNode.growAngle + currentSpread;
+
+        const radLeftBase = (angleLeft * Math.PI) / 180;
+        const radRightBase = (angleRight * Math.PI) / 180;
+
+        let posLeftX = currentNode.position.x + Math.cos(radLeftBase) * distance;
+        let posLeftY = currentNode.position.y + Math.sin(radLeftBase) * distance;
+
+        let posRightX = currentNode.position.x + Math.cos(radRightBase) * distance;
+        let posRightY = currentNode.position.y + Math.sin(radRightBase) * distance;
+
+        // Radial outward Repulsion influence mapping
+        let repelLeft = (Math.atan2(posLeftY, posLeftX) * 180) / Math.PI;
+        let repelRight = (Math.atan2(posRightY, posRightX) * 180) / Math.PI;
+
+        let mixedGrowAngleLeft = (angleLeft * 0.4) + (repelLeft * 0.6);
+        let mixedGrowAngleRight = (angleRight * 0.4) + (repelRight * 0.6);
+
+        // Run Collision Resolver
+        // Left Branch: we search 'inward/outward' (searchDirection = -1 ensures it pushes left further left if blocked)
+        const solverL = findFreePosition(mixedGrowAngleLeft, -1, distance);
+        const solverR = findFreePosition(mixedGrowAngleRight, 1, distance);
 
         // Create Child 1 (Left Branch)
         const child1Id = `${currentNode.id}_fL`;
         const child1 = {
           id: child1Id,
           icon: "all_inclusive",
-          title: `Trilha L do Infinito`,
+          title: `Trilha L${depth} Infinito`,
           description: "Continuação profunda da sua maestria.",
           cost: newCost,
           maxLevel: 5,
           color: currentNode.color,
-          size: "small",
-          position: { x: posLeftX, y: posLeftY },
-          growAngle: angleLeft, // Inherits the leaning angle
+          position: { x: solverL.x, y: solverL.y },
+          growAngle: solverL.finalAngle, 
+          depth: depth + 1,
+          spread: nextSpread,
           connections: [],
           requires: [currentNode.id]
         };
@@ -240,14 +302,15 @@ export function buildDynamicTree(baseNodes, unlockedLevels) {
         const child2 = {
           id: child2Id,
           icon: "emergency",
-          title: `Trilha R do Infinito`,
+          title: `Trilha R${depth} Infinito`,
           description: "Despertando potenciais esquecidos.",
           cost: newCost,
           maxLevel: 5,
           color: currentNode.color,
-          size: "small",
-          position: { x: posRightX, y: posRightY },
-          growAngle: angleRight, // Inherits the leaning angle
+          position: { x: solverR.x, y: solverR.y },
+          growAngle: solverR.finalAngle, 
+          depth: depth + 1,
+          spread: nextSpread,
           connections: [],
           requires: [currentNode.id]
         };
