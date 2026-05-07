@@ -1,221 +1,236 @@
-# cw-rep
+# 🏆 cw-rep (Sistema CW de Reputação e Habilidades)
 
--   Um sistema de habilidade/XP para qb (otimizado a partir de mz-skills)
--   Compatibilidade total com versões anteriores de exports do mz-skills (não há necessidade de atualizar todos os seus scripts usando mz skills)
--   Suporta menu QB e menu OX
+**Um sistema leve de reputação e habilidades para FiveM** — compatível com QBCore, com total compatibilidade retroativa com os exports do mz-skills.
 
->   Todo o crédito a MrZainRP por [mz-skills](https://github.com/MrZainRP/mz-skills) no qual isso é baseado. Ótimo script.
+[![Download](https://img.shields.io/badge/Download-GitHub-blue)](https://github.com/mri-Qbox-Brasil/cw-rep)
+[![Preview](https://img.shields.io/badge/Preview-Ox%20Menu-darkgreen)](https://discord.gg/FJY4mtjaKr)
+[![Tebex](https://img.shields.io/badge/Tebex-Store-orange)](https://cw-scripts.tebex.io/category/2523396)
 
->   Algo que cw-rep NÃO tem: habilidades de personagem padrão do GTA
+---
 
->   O menu QB é suportado... mas provavelmente não receberá muitas atualizações ou correções a menos que sejam críticas, e pode ter funcionalidade limitada em comparação com OX
+## ✨ Funcionalidades
 
-## Instalação
+| Funcionalidade | Descrição |
+|--------|-------------|
+| 🎖️ **Sistema de Habilidades e Reputação** | Dois tipos: `skill` (pessoal) e `rep` (baseada em emprego) |
+| 📈 **Níveis XP Exponenciais** | Curva de nível configurável (padrão 30 níveis) |
+| 🔔 **Compatibilidade Retroativa** | Substituto direto para mz-skills (mesmos exports) |
+| 🎨 **Menu Ox Lib** | UI moderna via ox_lib (padrão) |
+| 📋 **Suporte QB Menu** | Também suporta menu QB legado |
+| 📧 **E-mails de Level-Up** | Envia e-mails via qb-phone ao alcançar certos níveis |
+| 🎯 **Verificação de Habilidade** | Integração com verificações de habilidade do ox_lib |
+| 💾 **Banco de Dados Otimizado** | Armazenamento MySQL eficiente (migração automática do mz-skills) |
+| 🔧 **Totalmente Configurável** | Habilidades, ícones, mensagens, intervalos de nível personalizados |
 
--   Baixe o recurso e coloque-o na pasta de recursos. Certifique-se de que a pasta se chama `cw-rep`
--   Se você estiver instalando do zero: Importe o arquivo SQL para o banco de dados do seu servidor (ou seja, execute o arquivo sql e certifique-se de que o banco de dados está funcionando)
--   Se você estiver mudando de mz-skills:
-    -   Certifique-se de atualizar as habilidades cw-rep na Configuração para corresponder a mz-skills se você quiser manter os nomes que você tem
-    -   Remova a pasta mz-skills
--   Adicione ``start cw-rep`` ao seu server.cfg (ou simplesmente certifique-se de que cw-rep está na sua pasta [qb])
+---
 
->   CW-rep tem um novo formato de banco de dados (otimizado) em comparação com mz-skills, mas esta conversão é feita enquanto o script está sendo usado. Isso pode fazer com que alguns personagens antigos não utilizados ainda tenham o formato antigo até serem usados
+## 📦 Dependências
 
-## Configuração
+| Dependência | Obrigatório | Notas |
+|------------|----------|-------|
+| [qb-core](https://github.com/qbcore-framework/qb-core) | ✅ | Framework |
+| [ox_lib](https://github.com/overextended/ox_lib) | ✅ | UI, notificações |
+| [qb-phone](https://github.com/qbcore-framework/qb-phone) | ❌ | Para notificações por e-mail |
+| [cw-skills](https://github.com/stars/Coffeelot/lists/cw-scripts) | ❌ | Sistema de habilidades alternativo |
 
-Você provavelmente vai querer fazer alguma configuração para este script, então certifique-se de se familiarizar com a configuração. Existem algumas pequenas diferenças entre este e mz, mas o script deve ser capaz de reescrever seus dados do banco de dados mz-skills para cw-rep em tempo real, desde que os nomes em `Config.Skills` correspondam.
+---
 
-Você pode definir habilidades assim:
+## 📂 Estrutura de Arquivos
 
-```lua
-    lockpicking = { -- se você quiser usar nomes com espaços, você precisará digitá-lo como "['Habilidade de Arrombamento'] = {" por exemplo
-        icon = 'fas fa-unlock', -- ícone que aparece no menu
-        label = 'Arrombamento' -- Rótulo que é exibido no menu (o padrão é o nome da habilidade, assim como mz skills se isso não estiver definido)
-    },
 ```
-> Encontre os nomes dos ícones [aqui](https://fontawesome.com/v5/search?m=free)
+cw-rep/
+├── fxmanifest.lua
+├── config.lua                 # Configuração principal (habilidades, níveis, UI)
+├── server/
+│   └── server.lua            # Lógica do servidor (buscar/atualizar habilidades, DB)
+├── client/
+│   ├── client.lua           # Lógica do cliente (perda de habilidade ao longo do tempo)
+│   ├── functions.lua         # Funções de habilidade do lado do cliente
+│   └── gui.lua              # UI Ox/QB menu
+└── (opcional) sql/
+    └── cw-rep.sql            # Tabela do banco de dados
+```
 
-> Nota: cw-rep não vem com as mesmas habilidades/rep padrão que mz-skills, então você precisará atualizar a configuração
+---
 
-Se você quiser uma habilidade que também envie notificações ao jogador em certos níveis, você pode defini-las assim:
+## 🔧 Configuração
+
+### `config.lua` — Definição de Habilidades
 ```lua
-    lockpicking = { -- se você quiser usar nomes com espaços, você precisará digitá-lo como "['Habilidade de Arrombamento'] = {" por exemplo
-        icon = 'fas fa-unlock', -- ícone que aparece no menu
-        label = 'Arrombamento' -- Rótulo que é exibido no menu (o padrão é o nome da habilidade, assim como mz skills se isso não estiver definido)
+Config.Skills = {
+    fishing = {
+        label = 'Pescador',
+        icon = 'fas fa-fish-fins',
+        type = 'rep'              -- 'rep' ou 'skill'
+    },
+    lockpicking = {
+        label = 'Lockpicking',
+        icon = 'fas fa-unlock',
+        maxLevel = 350,
+        type = 'skill',
         messages = {
-            { notify = true, level = 50, message = "Você não é mais horrível com essa gazua" },
-            { notify = true, level = 100, message = "Você começa a se sentir melhor com essa gazua na sua mão" },
-            { notify = true, level = 200, message = "Você está ficando bom com uma gazua" },
-            { notify = true, level = 300, message = "Você sente que está arrasando no arrombamento agora" },
-            { notify = true, level = 350, message = "Nenhum tambor ficará intocado. Você é como o Advogado do Arrombamento!" },
+            { notify = true, level = 50, message = "Você não é mais horrível com essa lockpick" },
+            { notify = true, level = 100, message = "Você começa a se sentir melhor..." },
         }
     },
+    cooking = { label = 'Cozinhar', icon = 'fa-solid fa-drumstick-bite', type = 'skill' },
+    crafting = { label = 'Fabricação', icon = 'gear', type = 'skill' },
+    -- ... mais habilidades
+}
 ```
-O importante aqui é o `notify = true` porque sem isso você estará enviando e-mails! Notificações por e-mail são ótimas para reputação de trabalho ou reputação de área, por exemplo. Aqui está como definir uma com e-mails:
 
+### Configuração de Níveis
 ```lua
-    foodelivery = {
-        icon = 'fas fa-star',
-        label = 'Reputação do trabalho de entrega de comida',
-        messages = {
-            { level = 50, message = "Você está fazendo um ótimo trabalho", sender = "RH da FeedStars", subject = "FeedStars" },
-            { level = 100, message = "Nós só queríamos dizer que amamos você! ❤", sender = "RH da FeedStars", subject = "FeedStars" },
-            { level = 220, message = "Continue entregando! ❤", sender = "RH da FeedStars", subject = "FeedStars" },
-            { level = 300, message = "Você é uma verdadeira ESTRELA da Comida! ⭐", sender = "RH da FeedStars", subject = "FeedStars" },
-            { level = 500, message = "Você sequer tem uma vida?? Funcionário do ano!", sender = "RH da FeedStars", subject = "FeedStars" },
-        }
-    },
+-- Sistema de níveis exponencial (padrão)
+Config.DefaultLevels = generateExponentialLevels(10, 1.5, 30)
+-- Resulta em: Nível 1: 0-10 XP, Nível 2: 10-25 XP, Nível 3: 25-47 XP, etc.
+
+Config.GenericMaxAmount = 1000000000
+Config.XPBarColour = "green"
 ```
-## Níveis de Habilidade
-Os níveis de habilidade padrão são definidos em `Config.DefaultLevels` e você pode personalizá-los ao seu gosto, mas você também pode criar níveis personalizados para cada habilidade individual, por exemplo, a reputação de rua:
+
+### Configurações de UI
 ```lua
-    streetreputation = {
-        icon = 'fas fa-mask',
-        skillLevels = {
-            { title = "Desconhecido", from = 00, to = 1000 },
-            { title = "Novato", from = 1000, to = 2000 },
-            { title = "Malandro", from = 2000, to = 3000 },
-            { title = "Criminoso", from = 3000, to = 4000 },
-            { title = "Executor Urbano", from = 5000, to = 6000 },
-            { title = "Renegado", from = 6000, to = 7000 },
-            { title = "Subchefe", from = 8000, to = 9000 },
-            { title = "Chefe", from = 9000, to = 10000 },
-        }
-    },
+Config.UseOxMenu = true            -- true = ox_lib, false = qb-menu
+Config.SkillsTitle = "Habilidades"
+Config.RepTitle = "Reputação"
+Config.Skillmenu = "skill"         -- comando para abrir menu de habilidades
+Config.Repmenu = "rep"             -- comando para abrir menu de reputação
 ```
-> título é opcional
 
-Como você pode ver, você também deve incluir um remetente e um assunto aqui.
+---
 
-Você também pode encontrar esses exemplos na Configuração.
+## 🎮 Comandos
 
-## Usando cw-rep
-### Clientside
+| Comando | Descrição | Permissão |
+|----------|-------------|-------------|
+| `/skill` | Abrir menu de habilidades (ou o que estiver definido em `Config.Skillmenu`) | Todos |
+| `/rep` | Abrir menu de reputação | Todos |
+| `/giveskill [id] [skill] [amount]` | Dar/remover XP do jogador | Admin |
+| `/fetchSkills [source]` | Imprimir habilidades do jogador no console | Admin |
 
-#### Para atualizar uma habilidade, use o seguinte export:
+---
+
+## 📡 Eventos
+
+### Eventos do Servidor
+| Evento | Parâmetros | Descrição |
+|--------|-------------|-------------|
+| `cw-rep:server:update` | `data` (string JSON de habilidades) | Atualizar habilidades do jogador no DB |
+| `cw-rep:server:triggerEmail` | `citizenid, sender, subject, message` | Enviar e-mail de level-up |
+
+### Eventos do Cliente
+| Evento | Parâmetros | Descrição |
+|--------|-------------|-------------|
+| `cw-rep:client:updateSkills` | `skill, amount` | Atualizar XP de habilidade local |
+| `cw-rep:client:CheckSkills` | — | Abrir menu de habilidades (radial) |
+
+---
+
+## 🔌 Exports
+
+### Exports do Servidor
+| Export | Descrição | Exemplo |
+|--------|-------------|---------|
+| `exports['cw-rep']:updateSkill(source, skillName, amount)` | Atualizar uma habilidade do jogador | `exports["cw-rep"]:updateSkill(source, 'lockpicking', 10)` |
+| `exports['cw-rep']:fetchSkills(source)` | Obter todas as habilidades do jogador | `local skills = exports["cw-rep"]:fetchSkills(source)` |
+| `exports['cw-rep']:getCurrentSkill(skill)` | Obter XP atual para uma habilidade | `local xp = exports["cw-rep"]:getCurrentSkill('fishing')` |
+| `exports['cw-rep']:getCurrentLevel(skill)` | Obter nível para uma habilidade | `local lvl = exports["cw-rep"]:getCurrentLevel('fishing')` |
+| `exports['cw-rep']:getSkillInfo(skill)` | Obter config da habilidade (label, ícone) | `local info = exports["cw-rep"]:getSkillInfo('lockpicking')` |
+
+### Exports do Cliente
+| Export | Descrição | Exemplo |
+|--------|-------------|---------|
+| `exports['cw-rep']:updateSkill(skill, amount)` | Atualizar habilidade local | `exports["cw-rep"]:updateSkill('searching', 1)` |
+| `exports['cw-rep']:checkSkill(skill, val)` | Verificar se habilidade >= valor (callback) | `exports["cw-rep"]:checkSkill('lockpicking', 100, function(has) ... end)` |
+| `exports['cw-rep']:playerHasEnoughSkill(skill, val)` | Verificar se habilidade >= valor (direto) | `if exports["cw-rep"]:playerHasEnoughSkill('crafting', 200) then ...` |
+| `exports['cw-rep']:getCurrentSkill(skill)` | Obter XP atual | `local xp = exports["cw-rep"]:getCurrentSkill('cooking')` |
+| `exports['cw-rep']:getCurrentLevel(skill)` | Obter nível atual | `local lvl = exports["cw-rep"]:getCurrentLevel('hunting')` |
+| `exports['cw-rep']:getSkillInfo(skill)` | Obter info da habilidade | `local label = exports["cw-rep"]:getSkillInfo('mining').label` |
+
+> **Compatibilidade Retroativa:** Todos os exports do `mz-skills` funcionam. Use `GetCurrentSkill` (G maiúsculo) para obter dados no formato antigo (`{Current = XP}`).
+
+---
+
+## 📥 Instalação
+
+### Instalação Nova
+1. Coloque `cw-rep` na pasta `resources`.
+2. Importe o arquivo SQL para seu banco de dados:
+   ```sql
+   ALTER TABLE players ADD COLUMN skills TEXT DEFAULT '{}';
+   ```
+3. Adicione ao `server.cfg`:
+   ```
+   ensure qb-core
+   ensure ox_lib
+   ensure cw-rep
+   ```
+4. Configure `config.lua` (habilidades, níveis, menus).
+5. Reinicie seu servidor.
+
+### Migrando do mz-skills
+1. Remova `mz-skills` dos seus recursos.
+2. Instale `cw-rep`.
+3. **Mantenha os mesmos nomes de habilidades** em `Config.Skills` que você tinha no mz-skills.
+4. O cw-rep converterá automaticamente os dados antigos do mz-skills para o novo formato quando os jogadores usarem.
+5. Reinicie seu servidor.
+
+---
+
+## 🔗 Integração com Menu Radial
+
+Adicione ao `qb-radialmenu/config.lua`:
 ```lua
-    exports["cw-rep"]:updateSkill(skillName, amount)
+[3] = {
+    id = 'skills',
+    title = 'Ver Habilidades',
+    icon = 'triangle-exclamation',
+    type = 'client',
+    event = 'cw-rep:client:CheckSkills',
+    shouldClose = true,
+}
 ```
-Por exemplo, para atualizar "Searching" de bin-diving (como usado com mz-bins)
+
+---
+
+## 📧 Notificações por E-mail
+
+Habilite em `config.lua`:
 ```lua
-    exports["cw-rep"]:updateSkill("Searching", 1)
+Config.SendUpdateEmails = true
+Config.EmailWaitTimes = { min = 4500, max = 7000 }  -- milissegundos
 ```
-Você pode randomizar a quantidade de habilidade ganha, por exemplo:
- ```lua
-    local searchgain = math.random(1, 3)
-    exports["cw-rep"]:updateSkill("Searching", searchgain)
-```
-#### O export para verificar se uma habilidade é igual ou maior que um valor específico é o seguinte:
+
+Então adicione `messages` a qualquer habilidade:
 ```lua
-    exports["cw-rep"]:checkSkill(skill, val)
+foodelivery = {
+    icon = 'fas fa-star',
+    messages = {
+        { level = 50, message = "Você está indo muito bem!", sender = "FeedStars RH", subject = "FeedStars" },
+        { level = 300, message = "Você é uma verdadeira ESTRELA do Food! ⭐", sender = "FeedStars RH", subject = "FeedStars" },
+    }
+}
 ```
 
-Você pode usar isso para bloquear conteúdo atrás de um nível específico, por exemplo:
-```lua
-exports["cw-rep"]:checkSkill("Searching", 100, function(hasskill)
-    if hasskill then
-        TriggerEvent('mz-bins:client:Reward')
-    else
-        QBCore.Functions.Notify('You need at least 100XP in Searching to do this.', "error", 3500)
-    end
-end)
-```
-Ou como uma alternativa isso:
-```lua
-    local hasSkill = exports["cw-rep"]:playerHasEnoughSkill("Searching", 100)
-    if hasSkill then
-        -- do thing
-    end
-```
+---
 
-> Os dois acima funcionam mais ou menos da mesma forma, apenas maneiras diferentes de obter o mesmo resultado
+## 🔗 Links
 
-#### O export para obter a habilidade atual de um jogador para interagir com outros scripts é o seguinte:
-```lua
-    exports["cw-rep"]:getCurrentSkill(skill)
-```
-> Este difere de mz-skills em que retorna diretamente o valor. Em Mz-skills você teria que fazer `.Current` para obter o valor. Se você usar `GetCurrentSkill` (G maiúsculo) ele retorna da mesma forma que mz-skills costumava fazer
+- 📦 [Download](https://github.com/mri-Qbox-Brasil/cw-rep)
+- 💬 [Suporte Discord](https://discord.gg/FJY4mtjaKr)
+- 🛒 [Mais Scripts](https://github.com/stars/Coffeelot/lists/cw-scripts)
+- ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/cwscriptbois)
 
-#### Para obter o nível, em vez da quantidade de habilidade/xp:
-```lua
-    exports["cw-rep"]:getCurrentLevel(skill)
-```
+---
 
-Exemplo:
-```lua
-    local xp = exports["cw-rep"]:getCurrentSkill('crafting')
-    local level = exports["cw-rep"]:getCurrentLevel('crafting')
-    print('You are level ', level, ' in crafting. Your XP is', xp)
-```
-#### Se você quiser informações de uma habilidade (o que está definido na configuração: rótulo, por exemplo)
-```lua
-    exports["cw-rep"]:getSkillInfo(skill)
-```
+## 🏆 Créditos
 
-Exemplo de uso:
-```lua
-    local skillInfo = exports["cw-rep"]:getSkillInfo('gun_crafting')
-    print('Label of gun_crafting is', skillInfo.label)
-    print('Icon of gun_crafting is', skillInfo.icon)
-```
+- **MrZainRP** — [mz-skills](https://github.com/MrZainRP/mz-skills) original
+- **CW Scripts** — esta reescrita e otimização
 
+---
 
-## Serverside
-Para atualizar uma habilidade, use o seguinte export:
-```lua
-    exports["cw-rep"]:updateSkill(source, skillName, amount)
-```
-> `source` deve ser obviamente a fonte do jogador
+## 📄 Licença
 
-Um exemplo de como usar isso seria:
-```lua
-    exports["cw-rep"]:updateSkill(source, 'lockpicking', 10)
-```
-O export para verificar para obter as habilidades do jogador:
-```lua
-    exports["cw-rep"]:fetchSkills(source)
-```
-Um exemplo de como usar isso seria:
-```lua
-    local playerSkills = exports["cw-rep"]:fetchSkills(source)
-    print('Jogador com fonte',source, ' habilidades de lockpicking:',playerSkills.lockpicking)
-```
-
-> `source` deve ser obviamente a fonte do jogador
-
-## Menu Radial
-Para acesso ao menu radial ao comando "skills", adicione isso a qb-radialmenu/config.lua em algum lugar que pareça adequado:
-
-```lua
-    [3] = {
-        id = 'skills',
-        title = 'Verificar Habilidades',
-        icon = 'triangle-exclamation',
-        type = 'client',
-        event = 'cw-rep:client:CheckSkills',
-        shouldClose = true,
-    },
-```
-
->
-
-# Download
-
-[Download](https://github.com/mri-Qbox-Brasil/cw-rep)
-
-# Preview
-## Ox
-<p align="center">
-    <img src="https://media.discordapp.net/attachments/1016069642495729715/1227702266119852132/image.png?ex=66295dd5&is=6616e8d5&hm=544bbf052da18b79839863217e8cee7fb700f8971ee1f2b388c448f62d534325&=&format=webp&quality=lossless"/>
-</p>
-
-## Links úteis
-### ⭐ Confira nossa [Tebex store](https://cw-scripts.tebex.io/category/2523396) para alguns scripts baratos ⭐
-
-### [Mais scripts gratuitos](https://github.com/stars/Coffeelot/lists/cw-scripts)  👈
-
-**Suporte, atualizações e previews de scripts:** [Entre no discord!](https://discord.gg/FJY4mtjaKr)
-
-Se você quiser apoiar o que fazemos, pode nos comprar um café aqui:
-
-[![Nos compre um café](https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg)](https://www.buymeacoffee.com/cwscriptbois)
+Grátis para uso em servidores FiveM.

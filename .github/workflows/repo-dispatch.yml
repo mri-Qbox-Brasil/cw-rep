@@ -1,0 +1,133 @@
+name: Update Documentation
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Executa diariamente à meia-noite
+  workflow_dispatch:  # Permite execução manual
+  repository_dispatch:
+    types: [update-manual]  # Recebe eventos de outros repos
+
+jobs:
+  update-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório da documentação
+        uses: actions/checkout@v4
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Definir variáveis
+        id: vars
+        run: |
+          # Se for repository_dispatch, usar dados do evento
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "Modo: Atualização individual via dispatch"
+            echo "ORG=${{ github.event.client_payload.org }}" >> $GITHUB_ENV
+            echo "REPO=${{ github.event.client_payload.repo }}" >> $GITHUB_ENV
+            echo "NAME=${{ github.event.client_payload.name }}" >> $GITHUB_ENV
+            echo "SINGLE_REPO=true" >> $GITHUB_ENV
+          else
+            echo "Modo: Atualização completa"
+            echo "SINGLE_REPO=false" >> $GITHUB_ENV
+          fi
+
+      - name: Baixar lista de repositórios
+        run: |
+          echo "Baixando lista de repositórios..."
+          cat repos.json  # Apenas para depuração
+
+      - name: Baixar e processar MANUAL individual
+        if: env.SINGLE_REPO == 'true'
+        run: |
+          mkdir -p pages/mri/resources
+
+          org="${{ env.ORG }}"
+          repo="${{ env.REPO }}"
+
+          # Buscar o nome amigável no repos.json
+          name=$(jq -r --arg repo "$repo" '.repositories[] | select(.repo == $repo) | .name' repos.json)
+          if [ -z "$name" ]; then
+            echo "❌ Repositório $repo não encontrado em repos.json"
+            exit 1
+          fi
+
+          echo "---"
+          echo "Processando $name ($org/$repo)..."
+
+          status_code=$(curl -s -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/$org/$repo/MANUAL.md" \
+            -o "pages/mri/resources/$repo.md")
+
+          if [ "$status_code" -eq 200 ]; then
+            echo "✅ Sucesso! MANUAL.md de $repo baixado."
+            # Atualizar _meta.json preservando outras entradas
+            if [ ! -f pages/mri/resources/_meta.json ]; then
+              echo "{}" > pages/mri/resources/_meta.json
+            fi
+            jq --arg repo "$repo" --arg name "$name" '.[$repo] = $name' pages/mri/resources/_meta.json > tmp.json
+            mv tmp.json pages/mri/resources/_meta.json
+          else
+            echo "❌ Erro ao baixar MANUAL.md de $repo (Status: $status_code)"
+            rm -f "pages/mri/resources/$repo.md"
+            exit 1
+          fi
+
+          echo "Conteúdo do _meta.json:"
+          cat pages/mri/resources/_meta.json
+
+      - name: Baixar e processar MANUALs (completo)
+        if: env.SINGLE_REPO == 'false'
+        run: |
+          mkdir -p pages/mri/resources
+
+          # Inicializar o _meta.json para a sidebar
+          echo "{" > pages/mri/resources/_meta.json
+
+          repo_count=$(jq '.repositories | length' repos.json)
+          echo "Encontrados $repo_count repositórios para processar."
+
+          cat repos.json | jq -c '.repositories[]' | while read -r repo_info; do
+            org=$(echo $repo_info | jq -r '.org')
+            repo=$(echo $repo_info | jq -r '.repo')
+            name=$(echo $repo_info | jq -r '.name')
+
+            echo "---"
+            echo "Processando $name ($org/$repo)..."
+
+            status_code=$(curl -s -w "%{http_code}" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3.raw" \
+              "https://api.github.com/repos/$org/$repo/MANUAL.md" \
+              -o "pages/mri/resources/$repo.md")
+
+            if [ "$status_code" -eq 200 ]; then
+              echo "✅ Sucesso! MANUAL.md de $repo baixado."
+              echo "  \"$repo\": \"$name\"," >> pages/mri/resources/_meta.json
+            else
+              echo "❌ Erro ao baixar MANUAL.md de $repo (Status: $status_code)"
+              rm -f "pages/mri/resources/$repo.md"
+            fi
+          done
+
+          sed -i '$ s/,$//' pages/mri/resources/_meta.json
+          echo "}" >> pages/mri/resources/_meta.json
+
+          echo "---"
+          echo "Conteúdo do _meta.json gerado:"
+          cat pages/mri/resources/_meta.json
+
+      - name: Commit e Push se houver mudanças
+        run: |
+          git add pages/mri/resources/
+          if git diff --cached --quiet; then
+            echo "Sem mudanças nos MANUALs ou metadados."
+          else
+            git commit -m "chore: atualização automática dos MANUALs e sidebar"
+            git push
+          fi
