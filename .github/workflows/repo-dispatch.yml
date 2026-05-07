@@ -18,7 +18,7 @@ jobs:
       - name: Disparar atualização na documentação
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.DOCS_REPO_TOKEN }}  # PAT com acesso ao repo da documentação
+          token: ${{ secrets.GH_TOKEN }}  # PAT com acesso ao repo da documentação
           repository: mri-Qbox-Brasil/docs-mriqbox  # Ajuste conforme necessário
           event-type: update-manual
           client-payload: '{"org": "mri-Qbox-Brasil", "repo": "${{ github.event.repository.name }}", "name": "${{ github.repository }}"}'
