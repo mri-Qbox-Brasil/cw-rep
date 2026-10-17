@@ -1,6 +1,17 @@
 # 🏆 cw-rep (Sistema CW de Reputação e Habilidades)
 
+<<<<<<< fork
 **Um sistema leve de reputação e habilidades para FiveM** — compatível com QBCore, com total compatibilidade retroativa com os exports do mz-skills.
+||||||| base
+- A database held skill/XP system for qb (optimized from mz-skills)
+- Full backwards compatibility with mz-skills exports (no need to upgrade all your scripts using mz skills)
+- Supports QB menu and OX menu
+=======
+- A database held skill/XP system for qb (optimized from mz-skills)
+- Full backwards compatibility with mz-skills exports (no need to upgrade all your scripts using mz skills)
+- Supports QB menu and OX menu
+- Only updates database every X minutes rather than on-update
+>>>>>>> upstream
 
 [![Download](https://img.shields.io/badge/Download-GitHub-blue)](https://github.com/mri-Qbox-Brasil/cw-rep)
 [![Preview](https://img.shields.io/badge/Preview-Ox%20Menu-darkgreen)](https://discord.gg/FJY4mtjaKr)
@@ -37,6 +48,51 @@
 
 ## 📂 Estrutura de Arquivos
 
+<<<<<<< fork
+||||||| base
+# Installation
+- Download the resource and drop it to your resource folder. Make sure the folder is named `cw-rep`
+- If you're installing from scratch: Import the SQL file to your server's database (i.e. run the sql file and make sure the database runs)
+- If you are changing from mz-skills: 
+    - Make sure to update the cw-rep skills in the Config to match mz-skills if you want to keep the names you have
+    - Remove the mz-skills folder
+- Add ``start cw-rep`` to your server.cfg (or simply make sure cw-rep is in your [qb] folder)
+
+> CW-rep has a new (optimized) database format compared to mz-skills, but this conversion is done while the script is being used. This might cause some older unused characters to still have the old format until used
+
+## Setup
+
+You'll probably want to do some setup for this script, so make sure to familiarize yourself with the config. There are some minor differences between this and mz, but the script should be able to rewrite your mz-skills database data into cw-rep on the fly as long as the names in `Config.Skills` match.
+
+You can define skills like this:
+```lua
+    lockpicking = { -- if you want to use names with spaces you'll need to type it as "['Lockicking Skill'] = {" for example
+        icon = 'fas fa-unlock', -- icon that shows in the menu
+        label = 'Lockpicking' -- Label that is displayed in the menu (defaults to name of the skill, just like mz skills if this is not defined)
+    },
+=======
+# Installation
+- Download the resource and drop it to your resource folder. Make sure the folder is named `cw-rep`
+- If you're installing from scratch: Import the SQL file to your server's database (i.e. run the sql file and make sure the database runs)
+- If you are changing from mz-skills: 
+    - Make sure to update the cw-rep skills in the Config to match mz-skills if you want to keep the names you have
+    - Remove the mz-skills folder
+- Add ``start cw-rep`` to your server.cfg (or simply make sure cw-rep is in your [qb] folder)
+
+> CW-rep has a new (optimized) database format compared to mz-skills, but this conversion is done while the script is being used. This might cause some older unused characters to still have the old format until used
+
+## Setup
+
+You'll probably want to do some setup for this script, so make sure to familiarize yourself with the config. There are some minor differences between this and mz, but the script should be able to rewrite your mz-skills database data into cw-rep on the fly as long as the names in `Config.Skills` match.
+
+You can define skills like this:
+```lua
+    lockpicking = { -- if you want to use names with spaces you'll need to type it as "['Lockicking Skill'] = {" for example
+        icon = 'fas fa-unlock', -- icon that shows in the menu
+        label = 'Lockpicking' -- Label that is displayed in the menu (defaults to name of the skill, just like mz skills if this is not defined)
+        skipNotify = true -- Will not notify player when skill up/down if Config.ShowNotificationOnSkillGain is set to true
+    },
+>>>>>>> upstream
 ```
 cw-rep/
 ├── fxmanifest.lua
@@ -202,7 +258,39 @@ Config.SendUpdateEmails = true
 Config.EmailWaitTimes = { min = 4500, max = 7000 }  -- milissegundos
 ```
 
+<<<<<<< fork
 Então adicione `messages` a qualquer habilidade:
+||||||| base
+
+## Serverside
+To Update a skill please use the following export:
+=======
+### To get a list of all of a players skills with names and labels:
+```lua
+    exports["cw-rep"]:getAllSkillsAndLevel()
+```
+
+Example usage:
+```lua
+    local allSkillsForThisPlayer = exports['cw-rep']:getAllSkillsAndLevel()
+    print(json.encode(allSkillsForThisPlayer,{indent=true}))
+    print('My skill in lockpicking is', allSkillsForThisPlayer['lockpicking'].current)
+    print('My level in lockpicking is', allSkillsForThisPlayer['lockpicking'].level)
+```
+> This will be a list similar to the Config.Skills but with `name` and `current` skill level added to it for easy access. 
+
+
+### If you want to listen to changes of a players skills
+```lua
+RegisterNetEvent('cw-rep:client:repWasUpdated', function(skills)
+    print('new skills', json.encode(skills, {indent=true})) -- remove this line after you know how `skills` look
+    -- Add code to do something with this info
+end)
+```
+
+## Serverside
+To Update a skill please use the following export:
+>>>>>>> upstream
 ```lua
 foodelivery = {
     icon = 'fas fa-star',

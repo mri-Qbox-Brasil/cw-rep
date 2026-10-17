@@ -1,15 +1,24 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local useDebug = Config.Debug
 
+function notify(message, type)
+    QBCore.Functions.Notify(message, type)
+end
+
 function getLevel(currentSkill, skillName)
     local level = 0
+    if not skillName then print('^1 The skill name you sent in was not defined') return end
+    if not currentSkill then 
+        if useDebug then print('^1 Attempting to get level for a skill with no xp, defaulting to 0') end 
+        currentSkill = 0  
+    end
     if Config.Skills[skillName] == nil then print('^1 SKILL IS NOT DEFINED IN CONFIG', skillName) end
 
     local levels = Config.Skills[skillName].skillLevels or Config.DefaultLevels
     local levelLimits = levels[1]
     for index, levelData in ipairs(levels) do
         if currentSkill >= levelData.from and currentSkill < levelData.to then
-            if levelData.title then return levelData.title, levelData end
+            -- if levelData.title then return levelData.title, levelData end
             return level, levelData
         end
         if currentSkill >= levelData.to then
@@ -17,16 +26,29 @@ function getLevel(currentSkill, skillName)
             levelLimits = levelData
         end
     end
+<<<<<<< fork
     if #levels == level then
         level = 'Maestria'
     end
     if levelLimits.title then return levelLimits.title, levelLimits end
+||||||| base
+    if #levels == level then
+        level = 'Max'
+    end
+    if levelLimits.title then return levelLimits.title, levelLimits end
+=======
+    -- if #levels == level then
+    --     level = 'Max'
+    -- end
+    -- if levelLimits.title then return levelLimits.title, levelLimits end
+>>>>>>> upstream
     return level, levelLimits
 end
 
 local getCurrentSkill = function(skill)
     if useDebug then print('Fetching skill', skill) end
     if not mySkills[skill] then print("^1Skill " .. skill .. " does not exist") end
+    if useDebug then print('Skill level', mySkills[skill]) end
     return mySkills[skill]
 end exports('getCurrentSkill', getCurrentSkill)
 
@@ -44,7 +66,7 @@ local function handleNotification(skill, prevAmount, newAmount)
         for i, messageObj in pairs(Config.Skills[skill].messages) do
             if tonumber(prevAmount) < messageObj.level and tonumber(newAmount) >= messageObj.level then
                 if messageObj.notify then
-                    QBCore.Functions.Notify(messageObj.message,'success')
+                    notify(messageObj.message,'success')
                 else
                     local sender = messageObj.sender
                     local message = messageObj.message
@@ -80,7 +102,11 @@ function updateSkill(skill, amount)
     else
         mySkills[skill] = SkillAmount + tonumber(amount)
     end
+    if Config.ShowNotificationOnSkillGain and not Config.Skills[skill].skipNotify then 
+        notify(Config.SkillGainMessage(skill, amount)) 
+    end
     handleNotification(skill, SkillAmount, SkillAmount+tonumber(amount))
+    TriggerEvent('cw-rep:client:repWasUpdated', mySkills)
 	TriggerServerEvent("cw-rep:server:update", json.encode(mySkills))
 end exports('updateSkill', updateSkill)
 
@@ -92,8 +118,11 @@ function fetchSkills()
 end exports('fetchSkills', fetchSkills)
 
 local function getCurrentLevel(skill)
+    if useDebug then print('Fetching level for ', skill) end
     if Config.Skills[skill] then
         if mySkills[skill] then
+            if useDebug then print('skill', mySkills[skill]) end
+            if useDebug then print('level', json.encode(getLevel(mySkills[skill], skill), {indent=true})) end
             return getLevel(mySkills[skill], skill)
         else
             print("^1Attempting to find user data for skill that does not exist in your skill data. Could not find:", skill)
@@ -143,6 +172,18 @@ end exports('playerHasEnoughSkill', playerHasEnoughSkill)
 local function checkSkill (skill, value, cb)
     cb(playerHasEnoughSkill(skill,value))
 end exports('checkSkill', checkSkill)
+
+local function getAllSkillsAndLevel()
+    local skillsWithName = {}
+    for name, skill in pairs(Config.Skills) do
+        local thisSkill = skill
+        thisSkill.name = name
+        thisSkill.current = mySkills[name]
+        thisSkill.level = getLevel(thisSkill.current, name)
+        skillsWithName[name] = thisSkill
+    end
+    return skillsWithName
+end exports('getAllSkillsAndLevel', getAllSkillsAndLevel)
 
 
 -- mz skills bridge
