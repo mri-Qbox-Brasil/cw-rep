@@ -1,14 +1,17 @@
-local QBCore = exports['qb-core']:GetCoreObject()
-
-local oxmenu = exports.ox_menu
-
 local function getXpText(currentXp, nextLevel)
     if currentXp > nextLevel then return 'XP: '..tostring(currentXp) end
     return 'XP: '..currentXp..'/'..nextLevel
 end
 
+local function levelIsVerified(level)
+    if Config.HideSkillsWithZeroLevels then
+        return level > 0
+    end
+    return true
+end
+
 local function createSkillMenu()
-    skillMenu = {}
+    local skillMenu = {}
     skillMenu[#skillMenu + 1] = {
         isHeader = true,
         header = 'Skills',
@@ -24,16 +27,18 @@ local function createSkillMenu()
         end
         if not skillData.hide then
             local level, levelData = getLevel(currentValue, k)
-            skillMenu[#skillMenu + 1] = {
-                header = label .. ' (Level: ' .. level .. ')',
-                txt = getXpText(currentValue, levelData.to),
-                icon = skillData.icon or nil,
-                params = {
-                    args = {
-                        v
+            if levelIsVerified(level) then
+                skillMenu[#skillMenu + 1] = {
+                    header = label .. ' (Level: ' .. level .. ')',
+                    txt = getXpText(currentValue, levelData.to),
+                    icon = skillData.icon or nil,
+                    params = {
+                        args = {
+                            v
+                        }
                     }
                 }
-            }
+            end
         end
     end
     exports['qb-menu']:openMenu(skillMenu)
@@ -54,9 +59,6 @@ local function createSkillMenuOX(type)
     for _, key in ipairs(keys) do
         if not Config.Skills[key].hide and Config.Skills[key].type == type then
             local currentValue = mySkills[key] or 0
-            local SkillLevel
-            local min = 0
-            local max = 0
 
             local level, levelData = getLevel(tonumber(currentValue), key)
             -- Calculate progress bar percentage
@@ -69,17 +71,18 @@ local function createSkillMenuOX(type)
             if Config.Skills[key] and Config.Skills[key].icon then
                 icon = Config.Skills[key].icon
             end
-    
-            options[#options + 1] = {
-                title = label .. ' (Level: ' .. level .. ')',
-                description = getXpText(currentValue, levelData.to),
-                icon = icon,
-                args = {
-                    currentValue = currentValue
-                },
-                progress = (currentValue - levelData.from) / (levelData.to - levelData.from) * 100,
-                colorScheme = Config.XPBarColour,
-            }
+            if levelIsVerified(level) then
+                options[#options + 1] = {
+                    title = label .. ' (Level: ' .. level .. ')',
+                    description = getXpText(currentValue, levelData.to),
+                    icon = icon,
+                    args = {
+                        currentValue = currentValue
+                    },
+                    progress = (currentValue - levelData.from) / (levelData.to - levelData.from) * 100,
+                    colorScheme = Config.XPBarColour,
+                }
+            end
         end
     end
 
@@ -115,14 +118,12 @@ RegisterCommand(Config.Repmenu, function()
     else 
         Wait(10)
     end
-end)
+end, false)
         
-RegisterNetEvent("mz-skills:client:CheckSkills", function()
+RegisterNetEvent("cw-rep:client:CheckSkills", function()
     if Config.UseOxMenu then
         createSkillMenuOX()
-    elseif not Config.TypeCommand then
+    else
         createSkillMenu()
-    else 
-        Wait(10)
     end
 end)
